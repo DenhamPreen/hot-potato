@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=./node_modules/envio/evm.schema.json
+name: envio-indexer
+networks:
+- id: 10143
+  start_block: 0
+  contracts:
+  - name: HotPotato
+    address:
+    - 0xD69aB7699eFda519c4AAEBd1C44DbDB4c0508E1C
+    handler: src/EventHandlers.ts
+    events:
+    - event: Claim(address indexed player, uint256 indexed roundId, uint256 amount)
+    - event: NewHolder(address indexed holder, uint256 roundId, uint256 newPrice)
+    - event: PotUpdated(uint256 newPot)
+    - event: RoundEnded(uint256 indexed roundId, uint256 payoutAmount, uint256 numEligible, uint256 potAfter)
+    - event: Settle(address indexed player, bool win, uint256 randomness, uint256 roundId)
+    - event: SponsorCleared(uint256 indexed roundId)
+    - event: SponsorReplaced(address indexed previousSponsor, uint256 refundAmount, uint256 roundId)
+    - event: SponsorUpdated(address indexed sponsor, uint256 amount, string message, uint256 roundId)
+    - event: Take(address indexed player, uint256 pricePaid, uint256 targetBlock, uint256 roundId)
+unordered_multichain_mode: true
+preload_handlers: true

@@ -1,0 +1,312 @@
+# Envio HyperIndex GraphQL schema for HotPotato (HyperIndex-compatible)
+
+enum RoundStatus {
+  ACTIVE
+  FINALIZED
+}
+
+enum ActivityType {
+  TAKE
+  SETTLE
+  CLAIM
+  NEW_HOLDER
+  ROUND_ENDED
+  POT_UPDATED
+  SPONSOR_UPDATED
+  SPONSOR_REPLACED
+  SPONSOR_CLEARED
+}
+
+type Contract {
+  id: ID!
+  address: String!
+  chain_id: BigInt!
+  created_at: BigInt!
+  created_tx_hash: String!
+
+  base_entry_price_wei: BigInt!
+  price_increase_multiplier_bps: BigInt!
+  round_loss_payout_percent_bps: BigInt!
+  keeper_reward_wei: BigInt!
+  creator_fee_wei: BigInt!
+  creator_address: String!
+
+  current_round_id: BigInt!
+  current_entry_price_wei: BigInt!
+  current_pot_wei: BigInt!
+
+  total_rounds: BigInt!
+  total_takes: BigInt!
+  total_settlements: BigInt!
+  total_claims: BigInt!
+  total_sponsors: BigInt!
+}
+
+type Round {
+  id: ID! # `${contract}-${round}`
+  contract_id: ID!
+  round_number: BigInt!
+  status: RoundStatus!
+  started_at: BigInt!
+  started_block: BigInt!
+  ended_at: BigInt
+  ended_block: BigInt
+
+  num_participants: BigInt!
+
+  payout_pool_wei: BigInt!
+  per_share_wei: BigInt!
+  keeper_paid_wei: BigInt!
+  creator_paid_wei: BigInt!
+  pot_before_wei: BigInt!
+  pot_after_wei: BigInt!
+}
+
+type Player {
+  id: ID! # address (lowercased)
+  address: String!
+
+  total_plays: BigInt!
+  total_wins: BigInt!
+  total_losses: BigInt!
+  total_paid_wei: BigInt!
+  total_received_wei: BigInt!
+
+  first_active_at: BigInt
+  last_active_at: BigInt
+}
+
+type RoundParticipation {
+  id: ID! # `${round}-${player}`
+  contract_id: ID!
+  round_id: ID!
+  player_id: ID!
+  amount_paid_wei: BigInt!
+  is_fiftieth_free: Boolean!
+  tx_hash: String!
+  block_number: BigInt!
+  timestamp: BigInt!
+}
+
+type Settlement {
+  id: ID! # txHash-logIndex
+  contract_id: ID!
+  round_id: ID!
+  player_id: ID!
+  win: Boolean!
+  randomness: BigInt!
+  keeper_paid_wei: BigInt!
+  creator_paid_wei: BigInt!
+  payout_pool_wei: BigInt!
+  per_share_wei: BigInt!
+  pot_after_wei: BigInt!
+  tx_hash: String!
+  block_number: BigInt!
+  timestamp: BigInt!
+}
+
+type Claim {
+  id: ID!
+  contract_id: ID!
+  round_id: ID!
+  player_id: ID!
+  amount_wei: BigInt!
+  tx_hash: String!
+  block_number: BigInt!
+  timestamp: BigInt!
+}
+
+type Sponsor {
+  id: ID! # `${round}-${sequence}`
+  contract_id: ID!
+  round_id: ID!
+  sponsor_id: ID!
+  amount_wei: BigInt!
+  message: String!
+  active: Boolean!
+  was_replaced: Boolean!
+  refund_wei: BigInt!
+  created_tx_hash: String!
+  created_at: BigInt!
+}
+
+type TakeActivity {
+  id: ID!
+  type_: ActivityType!
+  contract_id: ID!
+  round_id: ID!
+  tx_hash: String!
+  block_number: BigInt!
+  timestamp: BigInt!
+
+  player_id: ID!
+  price_paid_wei: BigInt!
+  target_block: BigInt!
+}
+
+type SettleActivity {
+  id: ID!
+  type_: ActivityType!
+  contract_id: ID!
+  round_id: ID!
+  tx_hash: String!
+  block_number: BigInt!
+  timestamp: BigInt!
+
+  player_id: ID!
+  win: Boolean!
+  randomness: BigInt!
+  keeper_paid_wei: BigInt!
+}
+
+type ClaimActivity {
+  id: ID!
+  type_: ActivityType!
+  contract_id: ID!
+  round_id: ID!
+  tx_hash: String!
+  block_number: BigInt!
+  timestamp: BigInt!
+
+  player_id: ID!
+  amount_wei: BigInt!
+}
+
+type NewHolderActivity {
+  id: ID!
+  type_: ActivityType!
+  contract_id: ID!
+  round_id: ID!
+  tx_hash: String!
+  block_number: BigInt!
+  timestamp: BigInt!
+
+  holder_id: ID!
+  new_price_wei: BigInt!
+}
+
+type RoundEndedActivity {
+  id: ID!
+  type_: ActivityType!
+  contract_id: ID!
+  round_id: ID!
+  tx_hash: String!
+  block_number: BigInt!
+  timestamp: BigInt!
+
+  payout_amount_wei: BigInt!
+  num_eligible: BigInt!
+  pot_after_wei: BigInt!
+}
+
+type PotUpdatedActivity {
+  id: ID!
+  type_: ActivityType!
+  contract_id: ID!
+  round_id: ID
+  tx_hash: String!
+  block_number: BigInt!
+  timestamp: BigInt!
+
+  new_pot_wei: BigInt!
+}
+
+type SponsorUpdatedActivity {
+  id: ID!
+  type_: ActivityType!
+  contract_id: ID!
+  round_id: ID!
+  tx_hash: String!
+  block_number: BigInt!
+  timestamp: BigInt!
+
+  sponsor_id: ID!
+  amount_wei: BigInt!
+  message: String!
+}
+
+type SponsorReplacedActivity {
+  id: ID!
+  type_: ActivityType!
+  contract_id: ID!
+  round_id: ID!
+  tx_hash: String!
+  block_number: BigInt!
+  timestamp: BigInt!
+
+  previous_sponsor_id: ID!
+  refund_wei: BigInt!
+}
+
+type SponsorClearedActivity {
+  id: ID!
+  type_: ActivityType!
+  contract_id: ID!
+  round_id: ID!
+  tx_hash: String!
+  block_number: BigInt!
+  timestamp: BigInt!
+}
+
+type HotPotato_Claim {
+  id: ID!
+  player: String!
+  roundId: BigInt!
+  amount: BigInt!
+}
+
+type HotPotato_NewHolder {
+  id: ID!
+  holder: String!
+  roundId: BigInt!
+  newPrice: BigInt!
+}
+
+type HotPotato_PotUpdated {
+  id: ID!
+  newPot: BigInt!
+}
+
+type HotPotato_RoundEnded {
+  id: ID!
+  roundId: BigInt!
+  payoutAmount: BigInt!
+  numEligible: BigInt!
+  potAfter: BigInt!
+}
+
+type HotPotato_Settle {
+  id: ID!
+  player: String!
+  win: Boolean!
+  randomness: BigInt!
+  roundId: BigInt!
+}
+
+type HotPotato_SponsorCleared {
+  id: ID!
+  roundId: BigInt!
+}
+
+type HotPotato_SponsorReplaced {
+  id: ID!
+  previousSponsor: String!
+  refundAmount: BigInt!
+  roundId: BigInt!
+}
+
+type HotPotato_SponsorUpdated {
+  id: ID!
+  sponsor: String!
+  amount: BigInt!
+  message: String!
+  roundId: BigInt!
+}
+
+type HotPotato_Take {
+  id: ID!
+  player: String!
+  pricePaid: BigInt!
+  targetBlock: BigInt!
+  roundId: BigInt!
+}
