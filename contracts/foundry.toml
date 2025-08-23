@@ -1,0 +1,17 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+evm_version = "shanghai"
+optimizer = true
+optimizer_runs = 20000
+auto_detect_solc = true
+remappings = ["forge-std/=lib/forge-std/src/"]
+
+[rpc_endpoints]
+monad_testnet = "${MONAD_RPC_URL}"
+
+[fmt]
+line_length = 100
+tab_width = 4
+bracket_spacing = true
