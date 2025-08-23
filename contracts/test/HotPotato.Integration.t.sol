@@ -14,7 +14,6 @@ contract HotPotatoIntegrationTest is Test {
 
     uint256 internal constant BASE_PRICE = 1 ether;
     uint256 internal constant MULT_BPS = 12000; // 1.2x
-    uint256 internal constant PAYOUT_BPS = 5000; // 50%
     uint256 internal constant KEEPER_REWARD = 2e16; // from contract
     uint256 internal constant CREATOR_FEE = 1e17;   // from contract
 
@@ -27,7 +26,7 @@ contract HotPotatoIntegrationTest is Test {
         vm.deal(keeper, 0);
 
         vm.prank(deployer);
-        game = new HotPotato(BASE_PRICE, MULT_BPS, PAYOUT_BPS, creator);
+        game = new HotPotato(BASE_PRICE, MULT_BPS, creator);
     }
 
     function _clearPending() internal {
@@ -85,7 +84,7 @@ contract HotPotatoIntegrationTest is Test {
         uint256 potAfterKeeper = 49 ether > KEEPER_REWARD ? (49 ether - KEEPER_REWARD) : 0;
         uint256 creatorPay = potAfterKeeper > 0 ? (CREATOR_FEE <= potAfterKeeper ? CREATOR_FEE : potAfterKeeper) : 0;
         uint256 potAfterCreator = potAfterKeeper - creatorPay;
-        uint256 payoutPool = (potAfterCreator * PAYOUT_BPS) / 10000; // 50%
+        uint256 payoutPool = potAfterCreator; // 100% distributed after fees
         uint256 perShare = payoutPool / 50;
 
         // Creator should be paid

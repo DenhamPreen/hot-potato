@@ -10,24 +10,21 @@ import {HotPotato} from "src/HotPotato.sol";
 /// - MONAD_PRIVATE_KEY: deployer private key (uint)
 /// - BASE_PRICE_WEI: base price in wei (default: 1e18)
 /// - MULTIPLIER_BPS: price multiplier in bps (default: 12000)
-/// - PAYOUT_BPS: payout to prior holders on loss in bps (default: 5000)
 contract DeployHotPotato is Script {
     function run() external {
         uint256 deployerKey = vm.envUint("MONAD_PRIVATE_KEY");
 
         uint256 basePriceWei = _envOrUint("BASE_PRICE_WEI", 1 ether);
         uint256 multiplierBps = _envOrUint("MULTIPLIER_BPS", 12000);
-        uint256 payoutBps = _envOrUint("PAYOUT_BPS", 5000);
 
         address creatorAddress = _envOrAddress("CREATOR_ADDRESS", vm.addr(deployerKey));
         vm.startBroadcast(deployerKey);
-        HotPotato hotPotato = new HotPotato(basePriceWei, multiplierBps, payoutBps, creatorAddress);
+        HotPotato hotPotato = new HotPotato(basePriceWei, multiplierBps, creatorAddress);
         vm.stopBroadcast();
 
         console2.log("HotPotato deployed at:", address(hotPotato));
         console2.log("Base price (wei):", basePriceWei);
         console2.log("Multiplier (bps):", multiplierBps);
-        console2.log("Payout (bps):", payoutBps);
         console2.log("Creator:", creatorAddress);
     }
 

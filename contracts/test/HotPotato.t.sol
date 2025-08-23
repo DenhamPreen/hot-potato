@@ -14,7 +14,6 @@ contract HotPotatoTest is Test {
 
     uint256 internal constant BASE_PRICE = 1 ether;
     uint256 internal constant MULT_BPS = 12000; // 1.2x
-    uint256 internal constant PAYOUT_BPS = 5000; // 50%
 
     function setUp() public {
         deployer = makeAddr("deployer");
@@ -25,7 +24,7 @@ contract HotPotatoTest is Test {
         vm.deal(keeper, 0);
 
         vm.prank(deployer);
-        game = new HotPotato(BASE_PRICE, MULT_BPS, PAYOUT_BPS, creator);
+        game = new HotPotato(BASE_PRICE, MULT_BPS, creator);
 
         // Seed contract pot without triggering receive()
         vm.deal(address(game), 10 ether);
@@ -50,7 +49,6 @@ contract HotPotatoTest is Test {
     function testConstructorInitialState() public {
         assertEq(game.baseEntryPriceWei(), BASE_PRICE);
         assertEq(game.priceIncreaseMultiplierBps(), MULT_BPS);
-        assertEq(game.roundLossPayoutPercentBps(), PAYOUT_BPS);
         assertEq(game.currentEntryPriceWei(), BASE_PRICE);
         assertEq(game.currentRoundId(), 1);
         assertEq(game.creatorAddress(), creator);
@@ -58,16 +56,13 @@ contract HotPotatoTest is Test {
 
     function testConstructorRevertsOnBadParams() public {
         vm.expectRevert(bytes("basePrice<1ETH"));
-        new HotPotato(0.5 ether, MULT_BPS, PAYOUT_BPS, creator);
+        new HotPotato(0.5 ether, MULT_BPS, creator);
 
         vm.expectRevert(bytes("multiplier<1x"));
-        new HotPotato(BASE_PRICE, 9999, PAYOUT_BPS, creator);
-
-        vm.expectRevert(bytes("payout>100%"));
-        new HotPotato(BASE_PRICE, MULT_BPS, 10001, creator);
+        new HotPotato(BASE_PRICE, 9999, creator);
 
         vm.expectRevert(bytes("creator=0"));
-        new HotPotato(BASE_PRICE, MULT_BPS, PAYOUT_BPS, address(0));
+        new HotPotato(BASE_PRICE, MULT_BPS, address(0));
     }
 
     // ------------------------------- take() ------------------------------

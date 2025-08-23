@@ -60,7 +60,7 @@ contract HotPotato {
     // ---------------------------------------------------------------------
     uint256 public immutable baseEntryPriceWei;                 // base price to play (in wei)
     uint256 public immutable priceIncreaseMultiplierBps;        // price multiplier per successful catch (e.g., 12000 = 1.2x)
-    uint256 public immutable roundLossPayoutPercentBps;         // percent of pot reserved for round holders on loss
+    // Full pot after fees is distributed on loss (100%)
 
     // ---------------------------------------------------------------------
     // Storage (mutable game state)
@@ -109,17 +109,14 @@ contract HotPotato {
     constructor(
         uint256 baseEntryPriceWei_,
         uint256 priceIncreaseMultiplierBps_,
-        uint256 roundLossPayoutPercentBps_,
         address creatorAddress_
     ) {
         require(baseEntryPriceWei_ >= 1e18, "basePrice<1ETH");
         require(priceIncreaseMultiplierBps_ >= 10000, "multiplier<1x");
-        require(roundLossPayoutPercentBps_ <= 10000, "payout>100%");
         require(creatorAddress_ != address(0), "creator=0");
 
         baseEntryPriceWei = baseEntryPriceWei_;
         priceIncreaseMultiplierBps = priceIncreaseMultiplierBps_;
-        roundLossPayoutPercentBps = roundLossPayoutPercentBps_;
 
         currentEntryPriceWei = baseEntryPriceWei_;
         currentRoundId = 1; // start from round 1
@@ -261,11 +258,9 @@ contract HotPotato {
         // Compute payout pool for participants of the concluding round from remaining pot
         uint256 numEligible = participantsByRound[currentRoundId].length;
         uint256 payoutPool = 0;
-        if (numEligible > 0 && roundLossPayoutPercentBps > 0) {
+        if (numEligible > 0) {
             uint256 availableAfterFees = _availablePot();
-            if (availableAfterFees > 0) {
-                payoutPool = (availableAfterFees * roundLossPayoutPercentBps) / 10000;
-            }
+            payoutPool = availableAfterFees; // 100% of available after fees
             if (payoutPool > 0) {
                 potBalanceWei -= payoutPool;
                 uint256 perAddressShare = payoutPool / numEligible;

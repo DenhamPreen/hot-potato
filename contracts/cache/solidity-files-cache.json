@@ -889,8 +889,8 @@
       }
     },
     "script/DeployHotPotato.s.sol": {
-      "lastModificationDate": 1755975243401,
-      "contentHash": "2594c82fc975fdcc75dd1adafc777b86",
+      "lastModificationDate": 1755992043701,
+      "contentHash": "9d53585012eb102923d3a35dabb85ad7",
       "sourceName": "script/DeployHotPotato.s.sol",
       "solcConfig": {
         "settings": {
@@ -946,8 +946,8 @@
       }
     },
     "src/HotPotato.sol": {
-      "lastModificationDate": 1755977696490,
-      "contentHash": "7e635bd805fb83954d1d989e58508322",
+      "lastModificationDate": 1755992034918,
+      "contentHash": "2735f9da17fc83ec47d1b6e36e56d783",
       "sourceName": "src/HotPotato.sol",
       "solcConfig": {
         "settings": {
@@ -986,8 +986,8 @@
       }
     },
     "test/HotPotato.Integration.t.sol": {
-      "lastModificationDate": 1755978793304,
-      "contentHash": "99f8a2ee0e45346c24d36f45c42d3e9c",
+      "lastModificationDate": 1755992155806,
+      "contentHash": "36b5791047047649dbae4e23b212ed3f",
       "sourceName": "test/HotPotato.Integration.t.sol",
       "solcConfig": {
         "settings": {
@@ -1047,8 +1047,8 @@
       }
     },
     "test/HotPotato.t.sol": {
-      "lastModificationDate": 1755977865928,
-      "contentHash": "f988231b764b1fc0a776d542e78ad892",
+      "lastModificationDate": 1755992113538,
+      "contentHash": "ec2e6daa998448ee7f72cb6009bbd358",
       "sourceName": "test/HotPotato.t.sol",
       "solcConfig": {
         "settings": {
