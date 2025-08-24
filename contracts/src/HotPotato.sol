@@ -111,7 +111,7 @@ contract HotPotato {
         uint256 priceIncreaseMultiplierBps_,
         address creatorAddress_
     ) {
-        require(baseEntryPriceWei_ >= 1e18, "basePrice<1ETH");
+        require(baseEntryPriceWei_ >= 1 ether, "basePrice<1ETH");
         require(priceIncreaseMultiplierBps_ >= 10000, "multiplier<1x");
         require(creatorAddress_ != address(0), "creator=0");
 

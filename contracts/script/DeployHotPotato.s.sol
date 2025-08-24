@@ -7,12 +7,14 @@ import {HotPotato} from "src/HotPotato.sol";
 
 /// @notice Deployment script for Monad testnet (or any EVM chain via --rpc-url)
 /// Env vars:
-/// - MONAD_PRIVATE_KEY: deployer private key (uint)
+/// - MNEMONIC: BIP-39 mnemonic (optional)
+/// - MNEMONIC_INDEX: account index (default: 0)
+/// - MONAD_PRIVATE_KEY: deployer private key (uint, optional if MNEMONIC provided)
 /// - BASE_PRICE_WEI: base price in wei (default: 1e18)
 /// - MULTIPLIER_BPS: price multiplier in bps (default: 12000)
 contract DeployHotPotato is Script {
     function run() external {
-        uint256 deployerKey = vm.envUint("MONAD_PRIVATE_KEY");
+        uint256 deployerKey = _resolveDeployerKey();
 
         uint256 basePriceWei = _envOrUint("BASE_PRICE_WEI", 1 ether);
         uint256 multiplierBps = _envOrUint("MULTIPLIER_BPS", 12000);
@@ -26,6 +28,21 @@ contract DeployHotPotato is Script {
         console2.log("Base price (wei):", basePriceWei);
         console2.log("Multiplier (bps):", multiplierBps);
         console2.log("Creator:", creatorAddress);
+    }
+    function _resolveDeployerKey() internal view returns (uint256 pk) {
+        // Prefer mnemonic if provided; fallback to MONAD_PRIVATE_KEY
+        try vm.envString("MNEMONIC") returns (string memory mnem) {
+            uint32 index = uint32(_envOrUint("MNEMONIC_INDEX", 0));
+            // Derive: default derivation path (m/44'/60'/0'/0/index)
+            uint256 derivedKey = vm.deriveKey(mnem, index);
+            // Optional: resolve address to mirror behavior of MONAD_PRIVATE_KEY + vm.addr
+            address derivedAddr = vm.addr(derivedKey);
+            derivedAddr; // silence unused
+            return derivedKey;
+        } catch {
+            // No mnemonic, use explicit private key
+            return vm.envUint("MONAD_PRIVATE_KEY");
+        }
     }
 
     function _envOrUint(string memory key, uint256 defaultValue) internal view returns (uint256) {

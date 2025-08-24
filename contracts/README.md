@@ -6,8 +6,7 @@ Key properties:
 
 - **Base price**: initial entry price (e.g., 1 MON on Monad testnet)
 - **Price multiplier**: 1.2× (configurable via bps)
-- **Keeper reward**: constant `0.1` native (1e17 wei) paid from the pot on every settlement
-- **Payout on loss**: portion of pot reserved for equal claims by unique holders of that round
+- **Keeper reward**: constant `0.02` native (2e16 wei) paid from the pot on every settlement
 
 #### Contract
 
