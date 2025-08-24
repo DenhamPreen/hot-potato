@@ -93,8 +93,8 @@ contract HotPotato {
     uint256 private constant REENTRANCY_NOT_ENTERED = 1;
     uint256 private constant REENTRANCY_ENTERED = 2;
     uint256 private reentrancyStatus = REENTRANCY_NOT_ENTERED;
-    uint256 private constant KEEPER_REWARD_WEI = 2e16; // 0.02 native token
-    uint256 private constant CREATOR_FEE_WEI = 1e17;   // 0.1 native token
+    uint256 public immutable keeperRewardWei; // can be 0 for testing
+    uint256 public immutable creatorFeeWei;   // can be 0 for testing
 
     modifier nonReentrant() {
         require(reentrancyStatus != REENTRANCY_ENTERED, "REENTRANCY");
@@ -109,14 +109,18 @@ contract HotPotato {
     constructor(
         uint256 baseEntryPriceWei_,
         uint256 priceIncreaseMultiplierBps_,
-        address creatorAddress_
+        address creatorAddress_,
+        uint256 keeperRewardWei_,
+        uint256 creatorFeeWei_
     ) {
-        require(baseEntryPriceWei_ >= 1 ether, "basePrice<1ETH");
+        require(baseEntryPriceWei_ > 0, "basePrice=0");
         require(priceIncreaseMultiplierBps_ >= 10000, "multiplier<1x");
         require(creatorAddress_ != address(0), "creator=0");
 
         baseEntryPriceWei = baseEntryPriceWei_;
         priceIncreaseMultiplierBps = priceIncreaseMultiplierBps_;
+        keeperRewardWei = keeperRewardWei_;
+        creatorFeeWei = creatorFeeWei_;
 
         currentEntryPriceWei = baseEntryPriceWei_;
         currentRoundId = 1; // start from round 1
@@ -170,7 +174,7 @@ contract HotPotato {
         if (settlementBlockhash == bytes32(0)) revert StaleBlockhash();
 
         // Pay keeper reward from pot first
-        uint256 keeperReward = KEEPER_REWARD_WEI;
+        uint256 keeperReward = keeperRewardWei;
         if (keeperReward > 0) {
             uint256 available = _availablePot();
             uint256 payAmount = keeperReward <= available ? keeperReward : available;
@@ -248,7 +252,7 @@ contract HotPotato {
     function _onLose() internal {
         // Pay creator fee first from available pot
         uint256 availableBeforeFees = _availablePot();
-        uint256 creatorPay = CREATOR_FEE_WEI <= availableBeforeFees ? CREATOR_FEE_WEI : availableBeforeFees;
+        uint256 creatorPay = creatorFeeWei <= availableBeforeFees ? creatorFeeWei : availableBeforeFees;
         if (creatorPay > 0) {
             potBalanceWei -= creatorPay;
             (bool creatorPaid,) = payable(creatorAddress).call{value: creatorPay}("");

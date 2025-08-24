@@ -24,7 +24,7 @@ contract HotPotatoTest is Test {
         vm.deal(keeper, 0);
 
         vm.prank(deployer);
-        game = new HotPotato(BASE_PRICE, MULT_BPS, creator);
+        game = new HotPotato(BASE_PRICE, MULT_BPS, creator, 2e16, 1e17);
 
         // Seed contract pot without triggering receive()
         vm.deal(address(game), 10 ether);
@@ -55,14 +55,14 @@ contract HotPotatoTest is Test {
     }
 
     function testConstructorRevertsOnBadParams() public {
-        vm.expectRevert(bytes("basePrice<1ETH"));
-        new HotPotato(0.5 ether, MULT_BPS, creator);
+        vm.expectRevert(bytes("basePrice=0"));
+        new HotPotato(0, MULT_BPS, creator, 0, 0);
 
         vm.expectRevert(bytes("multiplier<1x"));
-        new HotPotato(BASE_PRICE, 9999, creator);
+        new HotPotato(BASE_PRICE, 9999, creator, 0, 0);
 
         vm.expectRevert(bytes("creator=0"));
-        new HotPotato(BASE_PRICE, MULT_BPS, address(0));
+        new HotPotato(BASE_PRICE, MULT_BPS, address(0), 0, 0);
     }
 
     // ------------------------------- take() ------------------------------

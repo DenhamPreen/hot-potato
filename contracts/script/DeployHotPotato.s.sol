@@ -10,24 +10,30 @@ import {HotPotato} from "src/HotPotato.sol";
 /// - MNEMONIC: BIP-39 mnemonic (optional)
 /// - MNEMONIC_INDEX: account index (default: 0)
 /// - MONAD_PRIVATE_KEY: deployer private key (uint, optional if MNEMONIC provided)
-/// - BASE_PRICE_WEI: base price in wei (default: 1e18)
+/// - BASE_PRICE_WEI: base price in wei (default: 1e18, set lower for testing)
 /// - MULTIPLIER_BPS: price multiplier in bps (default: 12000)
+/// - KEEPER_REWARD_WEI: keeper reward fixed amount (default: 2e16)
+/// - CREATOR_FEE_WEI: creator fee fixed amount (default: 1e17)
 contract DeployHotPotato is Script {
     function run() external {
         uint256 deployerKey = _resolveDeployerKey();
 
         uint256 basePriceWei = _envOrUint("BASE_PRICE_WEI", 1 ether);
         uint256 multiplierBps = _envOrUint("MULTIPLIER_BPS", 12000);
+        uint256 keeperRewardWei = _envOrUint("KEEPER_REWARD_WEI", 2e16);
+        uint256 creatorFeeWei = _envOrUint("CREATOR_FEE_WEI", 1e17);
 
         address creatorAddress = _envOrAddress("CREATOR_ADDRESS", vm.addr(deployerKey));
         vm.startBroadcast(deployerKey);
-        HotPotato hotPotato = new HotPotato(basePriceWei, multiplierBps, creatorAddress);
+        HotPotato hotPotato = new HotPotato(basePriceWei, multiplierBps, creatorAddress, keeperRewardWei, creatorFeeWei);
         vm.stopBroadcast();
 
         console2.log("HotPotato deployed at:", address(hotPotato));
         console2.log("Base price (wei):", basePriceWei);
         console2.log("Multiplier (bps):", multiplierBps);
         console2.log("Creator:", creatorAddress);
+        console2.log("Keeper reward (wei):", keeperRewardWei);
+        console2.log("Creator fee (wei):", creatorFeeWei);
     }
     function _resolveDeployerKey() internal view returns (uint256 pk) {
         // Prefer mnemonic if provided; fallback to MONAD_PRIVATE_KEY

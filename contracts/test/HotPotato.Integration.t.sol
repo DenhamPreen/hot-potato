@@ -26,7 +26,7 @@ contract HotPotatoIntegrationTest is Test {
         vm.deal(keeper, 0);
 
         vm.prank(deployer);
-        game = new HotPotato(BASE_PRICE, MULT_BPS, creator);
+        game = new HotPotato(BASE_PRICE, MULT_BPS, creator, KEEPER_REWARD, CREATOR_FEE);
     }
 
     function _clearPending() internal {

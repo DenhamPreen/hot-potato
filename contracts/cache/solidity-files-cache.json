@@ -888,9 +888,67 @@
         }
       }
     },
+    "script/Claim.s.sol": {
+      "lastModificationDate": 1755995298459,
+      "contentHash": "149f6a8c483968c4f5db12caad48871a",
+      "sourceName": "script/Claim.s.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 20000
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs",
+            "appendCBOR": true
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ]
+            }
+          },
+          "evmVersion": "shanghai",
+          "libraries": {}
+        }
+      },
+      "imports": [
+        "lib/forge-std/src/Base.sol",
+        "lib/forge-std/src/Script.sol",
+        "lib/forge-std/src/StdChains.sol",
+        "lib/forge-std/src/StdCheats.sol",
+        "lib/forge-std/src/StdConstants.sol",
+        "lib/forge-std/src/StdJson.sol",
+        "lib/forge-std/src/StdMath.sol",
+        "lib/forge-std/src/StdStorage.sol",
+        "lib/forge-std/src/StdStyle.sol",
+        "lib/forge-std/src/StdUtils.sol",
+        "lib/forge-std/src/Vm.sol",
+        "lib/forge-std/src/console.sol",
+        "lib/forge-std/src/console2.sol",
+        "lib/forge-std/src/interfaces/IMulticall3.sol",
+        "lib/forge-std/src/safeconsole.sol",
+        "script/utils/BaseHotPotatoScript.s.sol",
+        "src/HotPotato.sol"
+      ],
+      "versionRequirement": "^0.8.17",
+      "artifacts": {
+        "ClaimScript": {
+          "0.8.19+commit.7dd6d404.Darwin.appleclang": "Claim.s.sol/ClaimScript.json"
+        }
+      }
+    },
     "script/DeployHotPotato.s.sol": {
-      "lastModificationDate": 1755993428455,
-      "contentHash": "6997f3bb29c97c7e8fe105a83204d537",
+      "lastModificationDate": 1755994940730,
+      "contentHash": "ad31699f95808860db4fbd15498e0e02",
       "sourceName": "script/DeployHotPotato.s.sol",
       "solcConfig": {
         "settings": {
@@ -945,9 +1003,356 @@
         }
       }
     },
+    "script/Settle.s.sol": {
+      "lastModificationDate": 1755995298453,
+      "contentHash": "e14f1e7fd7114a49c96fde3a54a4273e",
+      "sourceName": "script/Settle.s.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 20000
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs",
+            "appendCBOR": true
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ]
+            }
+          },
+          "evmVersion": "shanghai",
+          "libraries": {}
+        }
+      },
+      "imports": [
+        "lib/forge-std/src/Base.sol",
+        "lib/forge-std/src/Script.sol",
+        "lib/forge-std/src/StdChains.sol",
+        "lib/forge-std/src/StdCheats.sol",
+        "lib/forge-std/src/StdConstants.sol",
+        "lib/forge-std/src/StdJson.sol",
+        "lib/forge-std/src/StdMath.sol",
+        "lib/forge-std/src/StdStorage.sol",
+        "lib/forge-std/src/StdStyle.sol",
+        "lib/forge-std/src/StdUtils.sol",
+        "lib/forge-std/src/Vm.sol",
+        "lib/forge-std/src/console.sol",
+        "lib/forge-std/src/console2.sol",
+        "lib/forge-std/src/interfaces/IMulticall3.sol",
+        "lib/forge-std/src/safeconsole.sol",
+        "script/utils/BaseHotPotatoScript.s.sol",
+        "src/HotPotato.sol"
+      ],
+      "versionRequirement": "^0.8.17",
+      "artifacts": {
+        "SettleScript": {
+          "0.8.19+commit.7dd6d404.Darwin.appleclang": "Settle.s.sol/SettleScript.json"
+        }
+      }
+    },
+    "script/SimulateGame.s.sol": {
+      "lastModificationDate": 1755995298459,
+      "contentHash": "675f1c6cf6cf1c12e92abb5df6422d82",
+      "sourceName": "script/SimulateGame.s.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 20000
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs",
+            "appendCBOR": true
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ]
+            }
+          },
+          "evmVersion": "shanghai",
+          "libraries": {}
+        }
+      },
+      "imports": [
+        "lib/forge-std/src/Base.sol",
+        "lib/forge-std/src/Script.sol",
+        "lib/forge-std/src/StdChains.sol",
+        "lib/forge-std/src/StdCheats.sol",
+        "lib/forge-std/src/StdConstants.sol",
+        "lib/forge-std/src/StdJson.sol",
+        "lib/forge-std/src/StdMath.sol",
+        "lib/forge-std/src/StdStorage.sol",
+        "lib/forge-std/src/StdStyle.sol",
+        "lib/forge-std/src/StdUtils.sol",
+        "lib/forge-std/src/Vm.sol",
+        "lib/forge-std/src/console.sol",
+        "lib/forge-std/src/console2.sol",
+        "lib/forge-std/src/interfaces/IMulticall3.sol",
+        "lib/forge-std/src/safeconsole.sol",
+        "script/utils/BaseHotPotatoScript.s.sol",
+        "src/HotPotato.sol"
+      ],
+      "versionRequirement": "^0.8.17",
+      "artifacts": {
+        "SimulateGame": {
+          "0.8.19+commit.7dd6d404.Darwin.appleclang": "SimulateGame.s.sol/SimulateGame.json"
+        }
+      }
+    },
+    "script/Sponsor.s.sol": {
+      "lastModificationDate": 1755995298459,
+      "contentHash": "37930b57ab147e6e342788b790eb7549",
+      "sourceName": "script/Sponsor.s.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 20000
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs",
+            "appendCBOR": true
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ]
+            }
+          },
+          "evmVersion": "shanghai",
+          "libraries": {}
+        }
+      },
+      "imports": [
+        "lib/forge-std/src/Base.sol",
+        "lib/forge-std/src/Script.sol",
+        "lib/forge-std/src/StdChains.sol",
+        "lib/forge-std/src/StdCheats.sol",
+        "lib/forge-std/src/StdConstants.sol",
+        "lib/forge-std/src/StdJson.sol",
+        "lib/forge-std/src/StdMath.sol",
+        "lib/forge-std/src/StdStorage.sol",
+        "lib/forge-std/src/StdStyle.sol",
+        "lib/forge-std/src/StdUtils.sol",
+        "lib/forge-std/src/Vm.sol",
+        "lib/forge-std/src/console.sol",
+        "lib/forge-std/src/console2.sol",
+        "lib/forge-std/src/interfaces/IMulticall3.sol",
+        "lib/forge-std/src/safeconsole.sol",
+        "script/utils/BaseHotPotatoScript.s.sol",
+        "src/HotPotato.sol"
+      ],
+      "versionRequirement": "^0.8.17",
+      "artifacts": {
+        "SponsorScript": {
+          "0.8.19+commit.7dd6d404.Darwin.appleclang": "Sponsor.s.sol/SponsorScript.json"
+        }
+      }
+    },
+    "script/Take.s.sol": {
+      "lastModificationDate": 1755995298459,
+      "contentHash": "6ecfea07e13cd858f68720f18c477b10",
+      "sourceName": "script/Take.s.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 20000
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs",
+            "appendCBOR": true
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ]
+            }
+          },
+          "evmVersion": "shanghai",
+          "libraries": {}
+        }
+      },
+      "imports": [
+        "lib/forge-std/src/Base.sol",
+        "lib/forge-std/src/Script.sol",
+        "lib/forge-std/src/StdChains.sol",
+        "lib/forge-std/src/StdCheats.sol",
+        "lib/forge-std/src/StdConstants.sol",
+        "lib/forge-std/src/StdJson.sol",
+        "lib/forge-std/src/StdMath.sol",
+        "lib/forge-std/src/StdStorage.sol",
+        "lib/forge-std/src/StdStyle.sol",
+        "lib/forge-std/src/StdUtils.sol",
+        "lib/forge-std/src/Vm.sol",
+        "lib/forge-std/src/console.sol",
+        "lib/forge-std/src/console2.sol",
+        "lib/forge-std/src/interfaces/IMulticall3.sol",
+        "lib/forge-std/src/safeconsole.sol",
+        "script/utils/BaseHotPotatoScript.s.sol",
+        "src/HotPotato.sol"
+      ],
+      "versionRequirement": "^0.8.17",
+      "artifacts": {
+        "TakeScript": {
+          "0.8.19+commit.7dd6d404.Darwin.appleclang": "Take.s.sol/TakeScript.json"
+        }
+      }
+    },
+    "script/UpdateCreator.s.sol": {
+      "lastModificationDate": 1755995298459,
+      "contentHash": "af8f7fcc6b461b4580d6fe6495e80925",
+      "sourceName": "script/UpdateCreator.s.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 20000
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs",
+            "appendCBOR": true
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ]
+            }
+          },
+          "evmVersion": "shanghai",
+          "libraries": {}
+        }
+      },
+      "imports": [
+        "lib/forge-std/src/Base.sol",
+        "lib/forge-std/src/Script.sol",
+        "lib/forge-std/src/StdChains.sol",
+        "lib/forge-std/src/StdCheats.sol",
+        "lib/forge-std/src/StdConstants.sol",
+        "lib/forge-std/src/StdJson.sol",
+        "lib/forge-std/src/StdMath.sol",
+        "lib/forge-std/src/StdStorage.sol",
+        "lib/forge-std/src/StdStyle.sol",
+        "lib/forge-std/src/StdUtils.sol",
+        "lib/forge-std/src/Vm.sol",
+        "lib/forge-std/src/console.sol",
+        "lib/forge-std/src/console2.sol",
+        "lib/forge-std/src/interfaces/IMulticall3.sol",
+        "lib/forge-std/src/safeconsole.sol",
+        "script/utils/BaseHotPotatoScript.s.sol",
+        "src/HotPotato.sol"
+      ],
+      "versionRequirement": "^0.8.17",
+      "artifacts": {
+        "UpdateCreatorScript": {
+          "0.8.19+commit.7dd6d404.Darwin.appleclang": "UpdateCreator.s.sol/UpdateCreatorScript.json"
+        }
+      }
+    },
+    "script/utils/BaseHotPotatoScript.s.sol": {
+      "lastModificationDate": 1755995298459,
+      "contentHash": "bedf9af9c2a4f3c45def19f9e70a172c",
+      "sourceName": "script/utils/BaseHotPotatoScript.s.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 20000
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs",
+            "appendCBOR": true
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ]
+            }
+          },
+          "evmVersion": "shanghai",
+          "libraries": {}
+        }
+      },
+      "imports": [
+        "lib/forge-std/src/Base.sol",
+        "lib/forge-std/src/Script.sol",
+        "lib/forge-std/src/StdChains.sol",
+        "lib/forge-std/src/StdCheats.sol",
+        "lib/forge-std/src/StdConstants.sol",
+        "lib/forge-std/src/StdJson.sol",
+        "lib/forge-std/src/StdMath.sol",
+        "lib/forge-std/src/StdStorage.sol",
+        "lib/forge-std/src/StdStyle.sol",
+        "lib/forge-std/src/StdUtils.sol",
+        "lib/forge-std/src/Vm.sol",
+        "lib/forge-std/src/console.sol",
+        "lib/forge-std/src/console2.sol",
+        "lib/forge-std/src/interfaces/IMulticall3.sol",
+        "lib/forge-std/src/safeconsole.sol",
+        "src/HotPotato.sol"
+      ],
+      "versionRequirement": "^0.8.17",
+      "artifacts": {
+        "BaseHotPotatoScript": {
+          "0.8.19+commit.7dd6d404.Darwin.appleclang": "BaseHotPotatoScript.s.sol/BaseHotPotatoScript.json"
+        }
+      }
+    },
     "src/HotPotato.sol": {
-      "lastModificationDate": 1755993611126,
-      "contentHash": "1a87fddb5e99f3d47fea98c90f464453",
+      "lastModificationDate": 1755994927026,
+      "contentHash": "5243e85807e6324fbb6e1f43d20e4730",
       "sourceName": "src/HotPotato.sol",
       "solcConfig": {
         "settings": {
@@ -986,8 +1391,8 @@
       }
     },
     "test/HotPotato.Integration.t.sol": {
-      "lastModificationDate": 1755992168664,
-      "contentHash": "36b5791047047649dbae4e23b212ed3f",
+      "lastModificationDate": 1755994959825,
+      "contentHash": "8a6fa650be73993394d9159914ec00f0",
       "sourceName": "test/HotPotato.Integration.t.sol",
       "solcConfig": {
         "settings": {
@@ -1047,8 +1452,8 @@
       }
     },
     "test/HotPotato.t.sol": {
-      "lastModificationDate": 1755992412910,
-      "contentHash": "ec2e6daa998448ee7f72cb6009bbd358",
+      "lastModificationDate": 1755994977436,
+      "contentHash": "58b242f95c3d942a92442cde713a61e3",
       "sourceName": "test/HotPotato.t.sol",
       "solcConfig": {
         "settings": {
