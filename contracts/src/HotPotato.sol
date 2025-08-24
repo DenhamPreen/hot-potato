@@ -1,9 +1,19 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.15;
 
 /// @title HotPotato - Simple on-chain Hot Potato game using native token
-/// @notice Players pay to take the potato. Keeper settles using next blockhash.
-/// On a loss, a portion of the pot is reserved for previous round holders to claim equally.
+/// @notice Players pay to take the potato. A keeper (or anyone) settles using the previous
+/// blockhash of the executing transaction, two blocks after take() to avoid the previous
+/// blockhash being known at submission time. On a loss, the contract attempts to pay an
+/// equal share to all participants of the round. Any individual transfer failure is skipped
+/// and the loop continues; skipped amounts remain in the pot.
+///
+/// Randomness manipulability rationale: the outcome uses the previous blockhash at the time of
+/// settlement, so a caller can time their submission. However, opposing incentives mitigate
+/// manipulation-by-inaction: if the outcome is a loss, other participants are incentivized to
+/// settle immediately to receive their share; if the outcome is a win, the current player is
+/// incentivized to settle immediately to become holder and increase price. This discourages
+/// delaying settlement to influence outcomes via inaction.
 contract HotPotato {
     // ---------------------------------------------------------------------
     // Errors
@@ -13,9 +23,6 @@ contract HotPotato {
     error NoPendingAttempt();
     error TooSoonToSettle();
     error StaleBlockhash();
-    error NothingToClaim();
-    error AlreadyClaimed();
-    error NotEligibleForRound();
     error AlreadyPlayedThisRound(uint256 roundId);
     error MaxParticipantsReached();
 
@@ -24,13 +31,14 @@ contract HotPotato {
     // ---------------------------------------------------------------------
     event Take(address indexed player, uint256 pricePaid, uint256 targetBlock, uint256 roundId);
     event Settle(address indexed player, bool win, uint256 randomness, uint256 roundId);
-    event Claim(address indexed player, uint256 indexed roundId, uint256 amount);
     event NewHolder(address indexed holder, uint256 roundId, uint256 newPrice);
     event RoundEnded(uint256 indexed roundId, uint256 payoutAmount, uint256 numEligible, uint256 potAfter);
     event PotUpdated(uint256 newPot);
     event SponsorUpdated(address indexed sponsor, uint256 amount, string message, uint256 roundId);
     event SponsorReplaced(address indexed previousSponsor, uint256 refundAmount, uint256 roundId);
     event SponsorCleared(uint256 indexed roundId);
+    event ParticipantPayoutFailed(address indexed participant, uint256 amount, uint256 roundId);
+    event SponsorRefundFailed(address indexed previousSponsor, uint256 amount, uint256 roundId);
 
     // ---------------------------------------------------------------------
     // Types
@@ -38,16 +46,12 @@ contract HotPotato {
     struct PendingAttempt {
         address playerAddress;
         uint256 amountPaidWei;
-        uint256 settlementTargetBlockNumber; // next block to derive randomness from
+        uint256 settlementTargetBlockNumber; // block when take() happened; settle allowed from (this + 2)
         uint256 createdInRoundId;            // round at time of attempt
         bool exists;
     }
 
-    struct RoundInfo {
-        uint256 totalPayoutAmountWei;   // total amount reserved for equal claims by eligible holders
-        uint256 totalNumEligibleHolders;    // number of unique holders in that round
-        bool isFinalized;         // round has ended via a loss
-    }
+    // (Removed legacy claim-based RoundInfo)
 
     struct SponsorInfo {
         address sponsorAddress;
@@ -68,20 +72,13 @@ contract HotPotato {
     uint256 public currentEntryPriceWei;          // current price to play
     address public currentHolderAddress;         // current potato holder (last successful catcher)
     uint256 public currentRoundId;               // incremented when a round ends (on a loss)
-    uint256 public potBalanceWei;                // liquid pot available (excludes amounts reserved for claims)
-    uint256 public totalReservedForClaimsWei;    // total amount reserved for claims across finalized rounds
+    uint256 public potBalanceWei;                // liquid pot available (excludes amounts reserved for sponsor refunds)
 
     PendingAttempt public pendingAttempt;        // only one pending attempt at a time
 
-    // Eligibility for equal-share claim when a round ends (unique holders per round)
-    mapping(uint256 => mapping(address => bool)) public didHoldInRound; // roundId => (player => held?)
-    mapping(uint256 => uint256) public uniqueHoldersCountInRound;       // roundId => count of unique holders
+    // Participation tracking
     mapping(uint256 => mapping(address => bool)) public hasPlayedInRound; // roundId => (address => played?)
     mapping(uint256 => address[]) public participantsByRound;             // roundId => participants list
-
-    // Claim tracking
-    mapping(uint256 => RoundInfo) public roundIdToRoundInfo;                     // roundId => RoundInfo
-    mapping(uint256 => mapping(address => bool)) public hasClaimedForRound;     // roundId => (player => claimed?)
 
     // Sponsor state (per current round)
     SponsorInfo public currentRoundSponsorInfo;
@@ -95,6 +92,7 @@ contract HotPotato {
     uint256 private reentrancyStatus = REENTRANCY_NOT_ENTERED;
     uint256 public immutable keeperRewardWei; // can be 0 for testing
     uint256 public immutable creatorFeeWei;   // can be 0 for testing
+    uint256 private constant MAX_SPONSOR_MESSAGE_LENGTH = 256;
 
     modifier nonReentrant() {
         require(reentrancyStatus != REENTRANCY_ENTERED, "REENTRANCY");
@@ -138,7 +136,7 @@ contract HotPotato {
         if (participantsCount >= 50) revert MaxParticipantsReached();
         bool isFiftiethParticipant = (participantsCount == 49);
         uint256 requiredPaymentWei = isFiftiethParticipant ? 0 : currentEntryPriceWei;
-        if (msg.value != requiredPaymentWei) revert InvalidAmount(msg.value, requiredPaymentWei);
+        if (msg.value >= requiredPaymentWei) revert InvalidAmount(msg.value, requiredPaymentWei);
         if (hasPlayedInRound[currentRoundId][msg.sender]) revert AlreadyPlayedThisRound(currentRoundId);
 
         // Register participation
@@ -151,7 +149,7 @@ contract HotPotato {
             emit PotUpdated(potBalanceWei);
         }
 
-        uint256 target = block.number + 1;
+        uint256 target = block.number;
         pendingAttempt = PendingAttempt({
             playerAddress: msg.sender,
             amountPaidWei: msg.value,
@@ -163,29 +161,32 @@ contract HotPotato {
         emit Take(msg.sender, msg.value, target, currentRoundId);
     }
 
-    /// @notice Settle the pending attempt using the next blockhash.
+    /// @notice Settle the pending attempt using the previous blockhash.
     /// Keeper receives a reward equal to 1e17, paid from the pot.
     function settle() external nonReentrant {
         PendingAttempt memory localPendingAttempt = pendingAttempt;
         if (!localPendingAttempt.exists) revert NoPendingAttempt();
-        if (block.number < localPendingAttempt.settlementTargetBlockNumber) revert TooSoonToSettle();
+        // require at least 2 blocks since take() so previous blockhash is unknown at tx submission
+        if (block.number < (localPendingAttempt.settlementTargetBlockNumber + 2)) revert TooSoonToSettle();
 
-        bytes32 settlementBlockhash = blockhash(localPendingAttempt.settlementTargetBlockNumber);
+        // use previous blockhash to avoid binding to a single target block and avoid 256-block staleness
+        bytes32 settlementBlockhash = blockhash(block.number - 1);
         if (settlementBlockhash == bytes32(0)) revert StaleBlockhash();
 
-        // Pay keeper reward from pot first
+        // Pay keeper reward from pot first (non-blocking on failure)
         uint256 keeperReward = keeperRewardWei;
         if (keeperReward > 0) {
             uint256 available = _availablePot();
             uint256 payAmount = keeperReward <= available ? keeperReward : available;
             if (payAmount > 0) {
-                potBalanceWei -= payAmount;
                 (bool ok,) = payable(msg.sender).call{value: payAmount}("");
-                require(ok, "keeper pay failed");
+                if (ok) {
+                    potBalanceWei -= payAmount;
+                }
             }
         }
 
-        // Random outcome derived from next blockhash, player, and round
+        // Random outcome derived from previous blockhash, player, and round
         uint256 randomness = uint256(keccak256(abi.encode(settlementBlockhash, localPendingAttempt.playerAddress, localPendingAttempt.createdInRoundId)));
         bool win;
         if (participantsByRound[currentRoundId].length >= 50) {
@@ -211,38 +212,12 @@ contract HotPotato {
         emit Settle(localPendingAttempt.playerAddress, win, randomness, localPendingAttempt.createdInRoundId);
     }
 
-    /// @notice Claim equal-share payout for a finalized round if you were a holder in that round.
-    function claim(uint256 roundId) external nonReentrant {
-        RoundInfo memory info = roundIdToRoundInfo[roundId];
-        if (!info.isFinalized) revert NothingToClaim();
-        if (!didHoldInRound[roundId][msg.sender]) revert NotEligibleForRound();
-        if (hasClaimedForRound[roundId][msg.sender]) revert AlreadyClaimed();
-
-        uint256 share = info.totalNumEligibleHolders == 0 ? 0 : info.totalPayoutAmountWei / info.totalNumEligibleHolders;
-        if (share == 0) revert NothingToClaim();
-
-        hasClaimedForRound[roundId][msg.sender] = true;
-
-        // Pay from reserved claims pool
-        require(totalReservedForClaimsWei >= share, "reserve underflow");
-        totalReservedForClaimsWei -= share;
-
-        (bool ok,) = payable(msg.sender).call{value: share}("");
-        require(ok, "claim transfer failed");
-
-        emit Claim(msg.sender, roundId, share);
-    }
+    // (Legacy claim function removed; distribution occurs during settle())    
 
     // ---------------------------------------------------------------------
     // Internal logic
     // ---------------------------------------------------------------------
     function _onWin(address player) internal {
-        // Update holder set for current round (unique addresses only)
-        if (!didHoldInRound[currentRoundId][player]) {
-            didHoldInRound[currentRoundId][player] = true;
-            uniqueHoldersCountInRound[currentRoundId] += 1;
-        }
-
         currentHolderAddress = player;
         currentEntryPriceWei = _mulDivUp(currentEntryPriceWei, priceIncreaseMultiplierBps, 10000);
         emit NewHolder(player, currentRoundId, currentEntryPriceWei);
@@ -250,41 +225,46 @@ contract HotPotato {
     }
 
     function _onLose() internal {
-        // Pay creator fee first from available pot
+        // Pay creator fee first from available pot (non-blocking on failure)
         uint256 availableBeforeFees = _availablePot();
         uint256 creatorPay = creatorFeeWei <= availableBeforeFees ? creatorFeeWei : availableBeforeFees;
         if (creatorPay > 0) {
-            potBalanceWei -= creatorPay;
             (bool creatorPaid,) = payable(creatorAddress).call{value: creatorPay}("");
-            require(creatorPaid, "creator pay failed");
+            if (creatorPaid) {
+                potBalanceWei -= creatorPay;
+            }
         }
 
-        // Compute payout pool for participants of the concluding round from remaining pot
+        // Compute payout pool for participants based on current contract balance after fees.
         uint256 numEligible = participantsByRound[currentRoundId].length;
         uint256 payoutPool = 0;
         if (numEligible > 0) {
-            uint256 availableAfterFees = _availablePot();
-            payoutPool = availableAfterFees; // 100% of available after fees
-            if (payoutPool > 0) {
-                potBalanceWei -= payoutPool;
-                uint256 perAddressShare = payoutPool / numEligible;
+            uint256 balanceAfterFees = address(this).balance;
+            if (balanceAfterFees > 0) {
+                uint256 perAddressShare = balanceAfterFees / numEligible;
                 if (perAddressShare > 0) {
+                    uint256 paidTotal = 0;
                     address[] storage participants = participantsByRound[currentRoundId];
                     uint256 participantsLength = participants.length;
                     for (uint256 participantIndex = 0; participantIndex < participantsLength; participantIndex++) {
                         (bool paid,) = payable(participants[participantIndex]).call{value: perAddressShare}("");
-                        require(paid, "participant pay failed");
+                        if (paid) {
+                            paidTotal += perAddressShare;
+                        } else {
+                            emit ParticipantPayoutFailed(participants[participantIndex], perAddressShare, currentRoundId);
+                        }
                     }
+                    if (paidTotal > 0) {
+                        if (potBalanceWei >= paidTotal) {
+                            potBalanceWei -= paidTotal;
+                        } else {
+                            potBalanceWei = 0;
+                        }
+                    }
+                    payoutPool = paidTotal; // actual amount distributed (remainder stays in contract)
                 }
             }
         }
-
-        // Finalize round
-        roundIdToRoundInfo[currentRoundId] = RoundInfo({
-            totalPayoutAmountWei: payoutPool,
-            totalNumEligibleHolders: numEligible,
-            isFinalized: true
-        });
 
         emit RoundEnded(currentRoundId, payoutPool, numEligible, potBalanceWei);
         emit PotUpdated(potBalanceWei);
@@ -356,14 +336,19 @@ contract HotPotato {
     // Utils
     // ---------------------------------------------------------------------
     function _mulDivUp(uint256 x, uint256 n, uint256 d) internal pure returns (uint256) {
-        // ceil(x * n / d)
+        // ceil(x * n / d) with overflow guard and cap at type(uint256).max
         unchecked {
+            if (x == 0 || n == 0) return 0;
+            // Overflow guard: if x > max / n then cap
+            uint256 max = type(uint256).max;
+            if (x > max / n) {
+                return max;
+            }
             uint256 prod = x * n;
-            // The -1 ensures we round up the division by subtracting 1 from the divisor
-            // For example, if prod=10 and d=3:
-            // Without -1: 10/3 = 3
-            // With -1: (10+3-1)/3 = 12/3 = 4
-            return prod == 0 ? 0 : (prod + d - 1) / d;
+            uint256 result = (prod + d - 1) / d;
+            // Cap in case of round-up overflow (defensive)
+            if (result > max) return max;
+            return result;
         }
     }
 
@@ -381,6 +366,7 @@ contract HotPotato {
     /// Sponsorship resets (message cleared and reserved released) when a round ends on loss.
     function sponsorPot(string calldata message_) external payable nonReentrant {
         if (msg.value < 1e18) revert InvalidAmount(msg.value, 1e18);
+        require(bytes(message_).length <= MAX_SPONSOR_MESSAGE_LENGTH, "msg too long");
 
         SponsorInfo memory s = currentRoundSponsorInfo;
 
@@ -407,11 +393,19 @@ contract HotPotato {
         sponsorReservedWei += msg.value;
         emit PotUpdated(potBalanceWei);
 
-        // Refund previous sponsor their full amount and release their reserved portion
+        // Refund previous sponsor their full amount and release their reserved portion (non-blocking)
         sponsorReservedWei -= s.sponsoredAmountWei;
-        potBalanceWei -= s.sponsoredAmountWei;
         (bool ok,) = payable(s.sponsorAddress).call{value: s.sponsoredAmountWei}("");
-        require(ok, "sponsor refund failed");
+        if (ok) {
+            // Align internal accounting only if transfer succeeded
+            if (potBalanceWei >= s.sponsoredAmountWei) {
+                potBalanceWei -= s.sponsoredAmountWei;
+            } else {
+                potBalanceWei = 0;
+            }
+        } else {
+            emit SponsorRefundFailed(s.sponsorAddress, s.sponsoredAmountWei, currentRoundId);
+        }
         emit SponsorReplaced(s.sponsorAddress, s.sponsoredAmountWei, currentRoundId);
 
         // Set new sponsor

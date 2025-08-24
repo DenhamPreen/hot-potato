@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.15;
 
 import "forge-std/Test.sol";
 import {HotPotato} from "../src/HotPotato.sol";
@@ -289,7 +289,7 @@ contract HotPotatoTest is Test {
         vm.prank(p);
         game.take{value: BASE_PRICE}();
         uint256 tgt = game.pendingTargetBlock();
-        assertEq(tgt, block.number + 1);
+        assertEq(tgt, block.number); // take block stored as target
     }
 }
 

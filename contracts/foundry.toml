@@ -5,11 +5,13 @@ libs = ["lib"]
 evm_version = "shanghai"
 optimizer = true
 optimizer_runs = 20000
-auto_detect_solc = true
+auto_detect_solc = false
+solc = "0.8.15"
 remappings = ["forge-std/=lib/forge-std/src/"]
 
 [rpc_endpoints]
 monad_testnet = "${MONAD_RPC_URL}"
+anvil = "http://127.0.0.1:8545"
 
 [fmt]
 line_length = 100

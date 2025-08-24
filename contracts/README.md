@@ -1,6 +1,6 @@
 ### Hot Potato Contracts (Foundry)
 
-This folder contains the Solidity contracts and scripts for a simple on-chain "Hot Potato" game using the native token. Players pay to take the potato; a keeper settles each attempt using the next blockhash. On a loss, a portion of the pot is reserved for prior round holders to claim equally. On a win, the player becomes the new holder and the entry price increases by 1.2×.
+This folder contains the Solidity contracts and scripts for a simple on-chain "Hot Potato" game using the native token. Players pay to take the potato; a keeper (or anyone) settles each attempt using the previous blockhash of the executing transaction (two blocks after take()). On a loss, the contract pays an equal share to all participants of the round directly during settlement (push payouts with failure skips). On a win, the player becomes the new holder and the entry price increases by 1.2×.
 
 Key properties:
 
@@ -12,17 +12,16 @@ Key properties:
 
 - `src/HotPotato.sol` implements:
   - `take()` — pay current price to attempt taking the potato (one pending at a time)
-  - `settle()` — keeper settles using the next blockhash
-  - `claim(roundId)` — claim your equal share from a finalized round if you were a holder
-  - Events: `Take`, `Settle`, `Claim` (plus helpful `NewHolder`, `RoundEnded`, `PotUpdated`)
+  - `settle()` — keeper settles using the previous blockhash; pays keeper and distributes per-head equal shares to participants (transfer failures are skipped)
+  - Events: `Take`, `Settle`, `NewHolder`, `RoundEnded`, `PotUpdated`, `SponsorUpdated`
 
 Economics summary:
 
 - Every `take()` adds the entry payment to the pot immediately.
 - On `settle()`:
-  - Keeper is paid 5% of the base price from the pot.
+  - Keeper is paid a fixed reward from the available pot (non-blocking on failure).
   - If win: player becomes the new holder, next price = ceil(currentPrice × 1.2).
-  - If loss: round ends, a configurable percent of the pot is reserved for equal claims by all unique holders from that round; price resets to base and holder clears.
+  - If loss: round ends and equal per-head payouts are attempted to all participants of the round. Individual transfer failures are skipped and the loop continues; skipped amounts remain in the pot. Price resets to base and holder clears.
 
 ### Prerequisites
 
@@ -76,7 +75,7 @@ Environment variables (with defaults):
 ### Notes
 
 - Settlement requires calling `settle()` after the target block is mined and within 256 blocks (blockhash availability window). This is ideal for an Envio HyperIndex keeper to automate.
-- Claims are equal-share among unique addresses that successfully held the potato during the round.
+- Randomness uses the previous blockhash at settlement. While callers can time submission, opposing incentives mitigate manipulation-by-inaction: losers want to settle quickly to receive payouts; winners want to settle quickly to lock in holder status and price increase.
 - All accounting guards against reentrancy, and transfers use `call`.
 
 ### Further work
