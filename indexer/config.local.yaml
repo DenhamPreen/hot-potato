@@ -1,15 +1,17 @@
 # yaml-language-server: $schema=./node_modules/envio/evm.schema.json
-name: envio-indexer
+name: envio-indexer-local
 field_selection:
   transaction_fields:
     - hash
 networks:
-  - id: 10143
+  - id: 31337
     start_block: 0
+    rpc_config:
+      url: http://localhost:8545
     contracts:
       - name: HotPotato
         address:
-          - 0xead8a1551a38d21037259cb20ae88458de63754b
+          - 0x5FbDB2315678afecb367f032d93F642f64180aa3
         handler: src/EventHandlers.ts
         events:
           - event: Claim(address indexed player, uint256 indexed roundId, uint256 amount)

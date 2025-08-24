@@ -9,10 +9,12 @@
     "codegen": "envio codegen",
     "dev": "envio dev",
     "start": "envio start",
+    "dev:local": "CONFIG=config.local.yaml RPC_URL=http://127.0.0.1:8545 envio dev",
+    "codegen:local": "CONFIG=config.local.yaml envio codegen",
     "test": "pnpm mocha"
   },
   "devDependencies": {
-    "@types/chai": "^4.3.11",    
+    "@types/chai": "^4.3.11",
     "@types/mocha": "10.0.6",
     "@types/node": "20.8.8",
     "ts-mocha": "^10.0.0",
