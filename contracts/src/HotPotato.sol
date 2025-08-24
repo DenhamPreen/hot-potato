@@ -136,7 +136,7 @@ contract HotPotato {
         if (participantsCount >= 50) revert MaxParticipantsReached();
         bool isFiftiethParticipant = (participantsCount == 49);
         uint256 requiredPaymentWei = isFiftiethParticipant ? 0 : currentEntryPriceWei;
-        if (msg.value >= requiredPaymentWei) revert InvalidAmount(msg.value, requiredPaymentWei);
+        if (msg.value < requiredPaymentWei) revert InvalidAmount(msg.value, requiredPaymentWei);
         if (hasPlayedInRound[currentRoundId][msg.sender]) revert AlreadyPlayedThisRound(currentRoundId);
 
         // Register participation
